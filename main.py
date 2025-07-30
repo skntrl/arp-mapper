@@ -22,7 +22,7 @@ def handle_arp(packet):
       devices[ip] = mac
 
     # Update last seen
-    last_seen[ip] = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    last_seen[ip] = datetime.now().strftime("%Y-%m-%d %Hh:%Mm:%Ss")
 
     # Detection: if IP is known, but MAC changed
     if ip in ip_mac_history:
