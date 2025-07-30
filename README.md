@@ -9,6 +9,7 @@ done - Sniff and intercept all ARP packets and identify active devices in networ
 done - Extract IP and MAC pairs
 done - Store unique pairs in a Python dictionary
 done - Display the updated table every few seconds
+doen - testing
 
 ## Remaining Tasks:
 
