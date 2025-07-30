@@ -1,0 +1,32 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LAN Mapper</title>
+    <meta http-equiv="refresh" content="5">
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h2>LAN Devices</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>IP</th><th>MAC</th><th>Vendor</th><th>OS (Guess)</th>
+                <th>First Seen</th><th>Last Seen</th><th>Packets</th><th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in devices %}
+            <tr>
+                <td>{{ d.ip }}</td><td>{{ d.mac }}</td><td>{{ d.vendor }}</td><td>{{ d.os }}</td>
+                <td>{{ d.first }}</td><td>{{ d.last }}</td><td>{{ d.pkts }}</td><td>{{ d.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
