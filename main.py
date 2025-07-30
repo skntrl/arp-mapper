@@ -1,4 +1,4 @@
-from scapy.all import sniff, ARP
+from scapy.all import sniff, ARP, IP
 from tabulate import tabulate
 from datetime import datetime
 from vendor_lookup import get_vendor, load_oui_file
@@ -9,6 +9,7 @@ import os
 import subprocess
 import json
 
+
 ip_mac_history = {} # Tracks original IP -> first seen MAC
 devices = {} # Global table of devices: IP -> MAC
 alerts = [] # Stores spoof warnings
@@ -17,6 +18,13 @@ oui_dict = load_oui_file() # Loads offline vendor data
 ip_packet_count = {} # IP -> count of packets seen
 first_seen = {}      # IP -> first timestamp
 offline_devices = {} # IP -> last confirmed offline time
+ip_traffic_bytes = {}  # IP -> total bytes
+
+
+def handle_traffic(packet):
+  if IP in packet:
+    ip = packet[IP].src
+    ip_traffic_bytes[ip] = ip_traffic_bytes.get(ip, 0) + len(packet)
 
 
 def get_ttl(ip):
@@ -107,6 +115,7 @@ def handle_arp(packet):
 def save_lan_snapshot_json():
   snapshot = []
   for ip, mac in devices.items():
+    traffic = ip_traffic_bytes.get(ip, 0)
     vendor = get_vendor(mac, oui_dict)
     os_guess = guess_os(get_ttl(ip))
     first = first_seen.get(ip, "Unknown")
@@ -121,7 +130,8 @@ def save_lan_snapshot_json():
       "first": first,
       "last": last,
       "pkts": count,
-      "status": status
+      "status": status,
+      "traffic": traffic
     })
   with open("lan_snapshot.json", "w") as f:
     json.dump(snapshot, f, indent=2)
@@ -137,13 +147,14 @@ def print_table():
         os_guess = guess_os(get_ttl(ip))
         count = ip_packet_count.get(ip, 0)
         first = first_seen.get(ip, "Unknown")
+        traffic = ip_traffic_bytes.get(ip, 0)
         status = "Offline" if ip in offline_devices else "Online"
-        table.append((ip, mac, vendor, os_guess, first, seen, count, status))
+        table.append((ip, mac, vendor, os_guess, first, seen, count, status, f"{traffic//1024} KB"))
 
       print("\nActive Devices on Local Network:")
       print(tabulate(
         table, 
-        headers=["IP", "MAC", "Vendor", "OS (Guess)", "First Seen", "Last Seen", "Pkts", "Status"], 
+        headers=["IP", "MAC", "Vendor", "OS (Guess)", "First Seen", "Last Seen", "Pkts", "Status", "Traffic"], 
         tablefmt="fancy_grid"
       ))
     save_lan_snapshot_json()
@@ -164,12 +175,28 @@ def check_for_offline_devices(timeout=60):
 if __name__ == "__main__":
   print("ARP Explorer running... Press Ctrl+C to stop.\n")
 
-  # Start table printer in background
+  # Start table printer
   printer_thread = threading.Thread(target=print_table, daemon=True)
   printer_thread.start()
 
+  # Start offline checker
   offline_thread = threading.Thread(target=check_for_offline_devices, daemon=True)
   offline_thread.start()
 
-  # Start sniffing (Requires root)
-  sniff(filter="arp", prn=handle_arp, store=0)
+  # Start ARP sniffer in background
+  arp_sniffer = threading.Thread(
+    target=lambda: sniff(filter="arp", prn=handle_arp, store=0),
+    daemon=True
+  )
+  arp_sniffer.start()
+
+  # Start IP traffic sniffer in background
+  traffic_sniffer = threading.Thread(
+    target=lambda: sniff(filter="ip", prn=handle_traffic, store=False),
+    daemon=True
+)
+  traffic_sniffer.start()
+
+  # Keep main thread alive
+  while True:
+    time.sleep(1)

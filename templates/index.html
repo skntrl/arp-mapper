@@ -16,7 +16,7 @@
         <thead>
             <tr>
                 <th>IP</th><th>MAC</th><th>Vendor</th><th>OS (Guess)</th>
-                <th>First Seen</th><th>Last Seen</th><th>Packets</th><th>Status</th>
+                <th>First Seen</th><th>Last Seen</th><th>Packets</th><th>Status</th><th>Traffic (KB)</th>
             </tr>
         </thead>
         <tbody>
@@ -30,6 +30,7 @@
             <td>{{ d.last }}</td>
             <td>{{ d.pkts }}</td>
             <td>{{ d.status }}</td>
+            <td>{{ d.traffic//1024 }}</td>
           </tr>
           {% endfor %}
         </tbody>
