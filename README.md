@@ -1,24 +1,29 @@
 # arp-mapper
 map all IPs and MACs addresses in the connected LAN
+## Remaining Tasks:
 
-Done till now:
+#### PArt 3
+
+getting device manufacturer name from the MAC  
+get TTL value and MAC to guess OS  
+last seen table to see when each device was last observed  
+log the warnings + timestamps alerts in CSV  
+
+
+## Done till now:  
 
 #### Part 1
 
-done - Sniff and intercept all ARP packets and identify active devices in network  
-done - Extract IP and MAC pairs  
-done - Store unique pairs in a Python dictionary  
-done - Display the updated table every few seconds  
-done - testing  
-
-## Remaining Tasks:
+Sniff and intercept all ARP packets and identify active devices in network  
+Extract IP and MAC pairs  
+Store unique pairs in a Python dictionary  
+Display the updated table every few seconds  
 
 #### Part 2
 
-Keep a history of known IP-MAC mappings
-For every new ARP reply, check if a known IP has a different MAC
-If known IP has different MAC, log it, and show it
-
+Keep a history of known IP-MAC mappings  
+For every new ARP reply, check if a known IP has a different MAC  
+If known IP has different MAC, log it, and show it  
 
 
 
