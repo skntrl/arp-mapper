@@ -49,7 +49,7 @@ def get_vendor(mac, oui_dict=None):
   if oui_dict:
     vendor = lookup_vendor_offline(mac, oui_dict)
 
-  # Offline failed
+  # Offline failed, so check Online
   if vendor == "Unknown Vendor":
     vendor = lookup_vendor_online(mac)
   
