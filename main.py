@@ -13,6 +13,9 @@ devices = {} # Global table of devices: IP -> MAC
 alerts = [] # Stores spoof warnings
 last_seen = {} # IP -> timestamp
 oui_dict = load_oui_file() # Loads offline vendor data
+ip_packet_count = {} # IP -> count of packets seen
+first_seen = {}      # IP -> first timestamp
+offline_devices = {} # IP -> last confirmed offline time
 
 
 def get_ttl(ip):
@@ -67,12 +70,25 @@ def handle_arp(packet):
     ip = arp.psrc
     mac = arp.hwsrc
 
+    if ip in ip_packet_count:
+      ip_packet_count[ip] += 1
+    else:
+      ip_packet_count[ip] = 1
+
     # Record the device if new
     if ip not in devices:
       devices[ip] = mac
 
     # Update last seen
-    last_seen[ip] = datetime.now().strftime("%Y-%m-%d %Hh:%Mm:%Ss")
+    last_seen[ip] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Only lists the first time - will be later used
+    if ip not in first_seen:
+      first_seen[ip] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # If previously offline, mark as online again
+    if ip in offline_devices:
+      del offline_devices[ip]
 
     # Detection: if IP is known, but MAC changed
     if ip in ip_mac_history:
@@ -94,17 +110,30 @@ def print_table():
       for ip, mac in devices.items():
         vendor = get_vendor(mac, oui_dict)
         seen = last_seen.get(ip, "Unknown")
-        ttl = get_ttl(ip)
-        os_guess = guess_os(ttl)
-        table.append((ip, mac, vendor, os_guess, seen))
+        os_guess = guess_os(get_ttl(ip))
+        count = ip_packet_count.get(ip, 0)
+        first = first_seen.get(ip, "Unknown")
+        status = "Offline" if ip in offline_devices else "Online"
+        table.append((ip, mac, vendor, os_guess, first, seen, count, status))
 
       print("\nActive Devices on Local Network:")
       print(tabulate(
         table, 
-        headers=["IP", "MAC", "Vendor", "OS (Guess)", "Last Seen"], 
+        headers=["IP", "MAC", "Vendor", "OS (Guess)", "First Seen", "Last Seen", "Pkts", "Status"], 
         tablefmt="fancy_grid"
       ))
     time.sleep(5)
+
+
+def check_for_offline_devices(timeout=60):
+  while True:
+    now = datetime.now()
+    for ip, last in list(last_seen.items()):
+      last_time = datetime.strptime(last, "%Y-%m-%d %H:%M:%S")
+      if (now - last_time).total_seconds() > timeout and ip not in offline_devices:
+        offline_devices[ip] = now.strftime("%Y-%m-%d %H:%M:%S")
+        print(f"Devices offline: {ip} last seen at {last}")
+    time.sleep(10)
 
 
 if __name__ == "__main__":
@@ -113,6 +142,9 @@ if __name__ == "__main__":
   # Start table printer in background
   printer_thread = threading.Thread(target=print_table, daemon=True)
   printer_thread.start()
+
+  offline_thread = threading.Thread(target=check_for_offline_devices, daemon=True)
+  offline_thread.start()
 
   # Start sniffing (Requires root)
   sniff(filter="arp", prn=handle_arp, store=0)
