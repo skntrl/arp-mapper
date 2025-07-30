@@ -2,13 +2,13 @@
 map all IPs and MACs addresses in the connected LAN
 ## Remaining Tasks:
 
+## Done till now:  
+
 #### Part 4
 
 Check what devices appear at what time  
 Basic bandwidth sniffing - who consumes the most packets.  
 Graphs - device uptime bars, IP/MAC heatmaps  
-
-## Done till now:  
 
 #### PArt 3
 
