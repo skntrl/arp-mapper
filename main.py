@@ -1,11 +1,15 @@
 from scapy.all import sniff, ARP
 from tabulate import tabulate
+from datetime import datetime
+from vendor_lookup import get_vendor, load_oui_file
 import threading
 import time
 
-ip_mac_history = {} # Tracks original MAC as seen per IP
-devices = {} # Global table of devices
-alerts = {} # Stores spoof warnings
+ip_mac_history = {} # Tracks original IP -> first seen MAC
+devices = {} # Global table of devices: IP -> MAC
+alerts = [] # Stores spoof warnings
+last_seen = {} # IP -> timestamp
+oui_dict = load_oui_file() # Loads offline vendor data
 
 def handle_arp(packet):
   if packet.haslayer(ARP):
@@ -13,9 +17,12 @@ def handle_arp(packet):
     ip = arp.psrc
     mac = arp.hwsrc
 
-    # Record the device if it is new
+    # Record the device if new
     if ip not in devices:
       devices[ip] = mac
+
+    # Update last seen
+    last_seen[ip] = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
     # Detection: if IP is known, but MAC changed
     if ip in ip_mac_history:
@@ -31,13 +38,18 @@ def handle_arp(packet):
 def print_table():
   while True:
     if devices:
-      table = [(ip, mac) for ip, mac in devices.items()]
+      table = []
+      for ip, mac in devices.items():
+        vendor = get_vendor(mac, oui_dict)
+        seen = last_seen.get(ip, "Unknown")
+        table.append((ip, mac, vendor, seen))
+
       print("\nActive Devices on Local Network:")
-      print(tabulate(table, headers=["IP Address", "MAC Address"], tablefmt="fancy_grid"))
+      print(tabulate(table, headers=["IP", "MAC", "Vendor", "Last Seen"], tablefmt="fancy_grid"))
     time.sleep(5)
 
 if __name__ == "__main__":
-  print("Sniffing ARP packets... Press Ctrl+C to stop.\n")
+  print("ARP Explorer running... Press Ctrl+C to stop.\n")
 
   # Start table printer in background
   printer_thread = threading.Thread(target=print_table, daemon=True)
