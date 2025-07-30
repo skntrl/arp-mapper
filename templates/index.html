@@ -20,12 +20,18 @@
             </tr>
         </thead>
         <tbody>
-            {% for d in devices %}
-            <tr>
-                <td>{{ d.ip }}</td><td>{{ d.mac }}</td><td>{{ d.vendor }}</td><td>{{ d.os }}</td>
-                <td>{{ d.first }}</td><td>{{ d.last }}</td><td>{{ d.pkts }}</td><td>{{ d.status }}</td>
-            </tr>
-            {% endfor %}
+          {% for d in devices %}
+          <tr>
+            <td>{{ d.ip }}</td>
+            <td>{{ d.mac }}</td>
+            <td>{{ d.vendor }}</td>
+            <td>{{ d.os }}</td>
+            <td>{{ d.first }}</td>
+            <td>{{ d.last }}</td>
+            <td>{{ d.pkts }}</td>
+            <td>{{ d.status }}</td>
+          </tr>
+          {% endfor %}
         </tbody>
     </table>
 </body>

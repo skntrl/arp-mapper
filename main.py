@@ -146,6 +146,7 @@ def print_table():
         headers=["IP", "MAC", "Vendor", "OS (Guess)", "First Seen", "Last Seen", "Pkts", "Status"], 
         tablefmt="fancy_grid"
       ))
+    save_lan_snapshot_json()
     time.sleep(5)
 
 
