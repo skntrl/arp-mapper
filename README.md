@@ -5,11 +5,11 @@ Done till now:
 
 #### Part 1
 
-done - Sniff and intercept all ARP packets and identify active devices in network
-done - Extract IP and MAC pairs
-done - Store unique pairs in a Python dictionary
-done - Display the updated table every few seconds
-doen - testing
+done - Sniff and intercept all ARP packets and identify active devices in network  
+done - Extract IP and MAC pairs  
+done - Store unique pairs in a Python dictionary  
+done - Display the updated table every few seconds  
+done - testing  
 
 ## Remaining Tasks:
 
