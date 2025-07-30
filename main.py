@@ -7,6 +7,7 @@ import time
 import csv
 import os
 import subprocess
+import json
 
 ip_mac_history = {} # Tracks original IP -> first seen MAC
 devices = {} # Global table of devices: IP -> MAC
@@ -101,6 +102,29 @@ def handle_arp(packet):
           log_alert_to_csv(ip, original_mac, mac)
     else:
       ip_mac_history[ip] = mac # Store the original MAC
+
+
+def save_lan_snapshot_json():
+  snapshot = []
+  for ip, mac in devices.items():
+    vendor = get_vendor(mac, oui_dict)
+    os_guess = guess_os(get_ttl(ip))
+    first = first_seen.get(ip, "Unknown")
+    last = last_seen.get(ip, "Unknown")
+    count = ip_packet_count.get(ip, 0)
+    status = "Offline" if ip in offline_devices else "Online"
+    snapshot.append({
+      "ip": ip,
+      "mac": mac,
+      "vendor": vendor,
+      "os": os_guess,
+      "first": first,
+      "last": last,
+      "pkts": count,
+      "status": status
+    })
+  with open("lan_snapshot.json", "w") as f:
+    json.dump(snapshot, f, indent=2)
 
 
 def print_table():
