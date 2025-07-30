@@ -1,5 +1,6 @@
 # Plan: This script will use first 3 bytes of each MAC address, called the OUI - Organizationally Unique Identifier to
 # look up the device vendor. Will try implementing both online and offline ways
+# Install oui file using curl -O https://standards-oui.ieee.org/oui/oui.txt
 
 # Online
 import requests
